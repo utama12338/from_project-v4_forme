@@ -5,9 +5,9 @@ import Navbar from '../Navbar/Navbar';
 import { ThemeProvider } from '@/components/ThemeProvider/Theme';
 import { SessionProvider } from '@/components/sessionProvider';
 import { getServerSession } from 'next-auth';
-import { Session } from 'next-auth';
+// import { Session } from 'next-auth';
 
-import { Provider } from 'next-auth/client';
+// import { Provider } from 'next-auth/client';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
