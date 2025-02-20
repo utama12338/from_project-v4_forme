@@ -3,7 +3,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import Navbar from '../Navbar/Navbar';
 import { ThemeProvider } from '@/components/ThemeProvider/Theme';
-import { SessionProvider } from '@/components/sessionProvider';
+import { SessionProvider } from '@/components/SessionProvider';
 import { getServerSession } from 'next-auth';
 // import { Session } from 'next-auth';
 
@@ -25,13 +25,14 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <SessionProvider session={session}>
+        
       <ThemeProvider>
         <Navbar />
-       
+        <SessionProvider session={session}>
             {children}
-            </ThemeProvider>
             </SessionProvider>
+            </ThemeProvider>
+            
       </body>
     </html>
   );

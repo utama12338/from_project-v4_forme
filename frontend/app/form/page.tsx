@@ -13,8 +13,10 @@ import  { CheckboxItem } from '@/components/checkbox3d';
 import Button_v2 from '@/components/button/delete._v2';
 import { SystemData } from '../types/inputform';
 import DetailButton from '../components/button/detail'; // เพิ่ม import DetailButton
+import {useSession} from 'next-auth/react';
 
 export default function SystemList() {
+  const { data: _session, status } = useSession(); 
   const {
     systems,
     // fetchSystems, // Make sure this is exposed from the view model
@@ -44,7 +46,9 @@ export default function SystemList() {
 
   const [selectedSystems, setSelectedSystems] = useState<SystemData[]>([]);
   const [showDetailModal, setShowDetailModal] = useState(false);
-
+    
+    console.log('useSession', useSession);
+    console.log('status',status)  
   // Add helper function to get selected systems
   const getSelectedSystems = (): SystemData[] => {
     return systems.filter(system => selectedItems.includes(system.id));

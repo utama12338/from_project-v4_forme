@@ -9,10 +9,8 @@ export default function SignInPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [formData, setFormData] = useState({
-    username: '',
-    password: '',
-  });
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,34 +19,25 @@ export default function SignInPage() {
 
     try {
       const result = await signIn('credentials', {
-        username: formData.username,
-        password: formData.password,
+        username: username,
+        password: password,
         redirect: false,
+        callbackUrl: '/form',
       });
 
-      console.log('SignIn result:', result);
-
       if (result?.error) {
-        console.log('Error:', result.error);
-        setError('Invalid username or password');
-      } else {
-        
-        router.push('/form'); // Redirect to dashboard after successful login
-        router.refresh();
+        setError(result.error);
+        return;
+      }
+
+      if (result?.ok) {
+        router.replace('/form');
       }
     } catch (error) {
-      console.log('Catch Error:', error);
       setError('An error occurred during sign in');
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({
-      ...prev,
-      [e.target.name]: e.target.value
-    }));
   };
 
   return (
@@ -59,7 +48,11 @@ export default function SignInPage() {
             Sign in to your account
           </h2>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        <form 
+          className="mt-8 space-y-6" 
+          onSubmit={handleSubmit}
+          method="post"
+        >
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
               <label htmlFor="username" className="sr-only">
@@ -72,8 +65,8 @@ export default function SignInPage() {
                 required
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                 placeholder="Username"
-                value={formData.username}
-                onChange={handleChange}
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 disabled={isLoading}
               />
             </div>
@@ -88,8 +81,8 @@ export default function SignInPage() {
                 required
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                 placeholder="Password"
-                value={formData.password}
-                onChange={handleChange}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 disabled={isLoading}
               />
             </div>

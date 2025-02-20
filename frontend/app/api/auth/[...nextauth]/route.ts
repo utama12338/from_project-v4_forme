@@ -1,7 +1,10 @@
-import NextAuth, { DefaultSession, NextAuthOptions } from "next-auth";
+import NextAuth from "next-auth";
+import type { AuthOptions, DefaultSession } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { PrismaAuthAdapter } from '../../adapters/prisma-auth.adapter';
+// import { PrismaAdapter } from "@auth/prisma-adapter";
+import { PrismaClient } from "@prisma/client";
 import argon2 from 'argon2';
+
 
 // Extend the built-in types
 declare module "next-auth" {
@@ -9,63 +12,69 @@ declare module "next-auth" {
     user: {
       id: string;
       role: string;
+      username: string;
     } & DefaultSession["user"]
   }
 
   interface User {
     id: string;
     role: string;
-    name: string;
+    username: string;
   }
 }
 
-// Initialize PrismaAuthAdapter
-const authAdapter = new PrismaAuthAdapter();
+declare module "next-auth/jwt" {
+  interface JWT {
+    id: string;
+    role: string;
+    username: string;
+  }
+}
+
+const prisma = new PrismaClient();
 
 // Configure NextAuth options
-const authOptions: NextAuthOptions = {
+const authOptions: AuthOptions = {
+  // Remove the adapter line since we're using Credentials provider
   providers: [
     CredentialsProvider({
-      name: "Credentials",
+      name: 'Credentials',
       credentials: {
-        username: { label: "Username", type: "text" },
-        password: { label: "Password", type: "password" }
+        username: { label: 'Username', type: 'text' },
+        password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        if (!credentials?.username || !credentials?.password) {
-          return null;
-        }
+        if (!credentials) return null
+        const user = await prisma.user.findUnique({
+          where: { username: credentials.username },
+        })
 
-        try {
-          const user = await authAdapter.findUserByUsername(credentials.username);
-
-          if (!user) {
-            return null;
-          }
-
-          const isPasswordValid = await argon2.verify(user.password, credentials.password);
-
-          if (!isPasswordValid) {
-            return null;
-          }
-
+        if (user && await argon2.verify(user.password, credentials.password)) {
           return {
             id: user.id,
             name: user.username,
-            role: user.role
-          };
-        } catch (error) {
-          console.error("CredentialsProvider error:", error);
-          return null;
+            role: user.role, // Make sure to include role
+            username: user.username
+          }
+        } else {
+          throw new Error('Invalid username or password')
         }
-      }
+      },
     })
+
+
   ],
+  // adapter: PrismaAdapter(prisma),
+  session: {
+    strategy: "jwt",
+    maxAge: 24 * 60 * 60, // 24 hours
+  },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
         token.role = user.role;
+        token.username = user.username;
       }
       return token;
     },
@@ -73,13 +82,10 @@ const authOptions: NextAuthOptions = {
       if (session?.user) {
         session.user.id = token.id as string;
         session.user.role = token.role as string;
+        session.user.username = token.username;
       }
       return session;
     }
-  },
-  session: {
-    strategy: "jwt",
-    maxAge: 0.5 * 24 * 60 * 60, // 30 days
   },
   pages: {
     signIn: process.env.NEXT_PUBLIC_FRONTEND_URL || "/auth/signin"
@@ -92,7 +98,7 @@ const authOptions: NextAuthOptions = {
         httpOnly: true,
         sameSite: 'lax',
         path: '/',
-        secure: true,
+        secure: true
       },
     },
     callbackUrl: {
