@@ -4,10 +4,7 @@ import './globals.css';
 import Navbar from '../Navbar/Navbar';
 import { ThemeProvider } from '@/components/ThemeProvider/Theme';
 import { SessionProvider } from '@/components/SessionProvider';
-import { getServerSession } from 'next-auth';
-// import { Session } from 'next-auth';
-
-// import { Provider } from 'next-auth/client';
+import { auth } from "../auth"
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
@@ -21,19 +18,17 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
 
-  const session = await getServerSession();
+  const session = await auth()
   return (
     <html lang="en">
-      <body className={inter.className}>
-        
+    <body className={inter.className}>
       <ThemeProvider>
-        <Navbar />
         <SessionProvider session={session}>
-            {children}
-            </SessionProvider>
-            </ThemeProvider>
-            
-      </body>
-    </html>
+          <Navbar />
+          {children}
+        </SessionProvider>
+      </ThemeProvider>
+    </body>
+  </html>
   );
 }
