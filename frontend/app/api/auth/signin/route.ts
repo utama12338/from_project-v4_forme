@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import argon2 from 'argon2';
+import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { PrismaAuthAdapter } from '../../adapters/prisma-auth.adapter';
 
@@ -26,20 +26,21 @@ export async function POST(request: Request) {
     }
 
     // Find user using adapter
+    console.log('username:', username);
     const user = await authAdapter.findUserByUsername(username);
 
     if (!user) {
       return NextResponse.json(
-        { message: 'Invalid credentials' },
+        { message: 'Invalid user' },
         { status: 401 }
       );
     }
 
-    // Verify password
-    const validPassword = await argon2.verify(user.password, password);
+    // Verify password - แก้ไขลำดับพารามิเตอร์
+    const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) {
       return NextResponse.json(
-        { message: 'Invalid credentials' },
+        { message: 'Invalid password' },
         { status: 401 }
       );
     }

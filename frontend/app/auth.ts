@@ -1,12 +1,13 @@
 import NextAuth from "next-auth"
-// import { PrismaClient } from "@prisma/client"
 import CredentialsProvider from "next-auth/providers/credentials"
 import bcrypt from 'bcryptjs'
 import type { User } from "@prisma/client"
 import { Session } from "next-auth"
 import { JWT } from "next-auth/jwt"
-import { prisma } from "./app/api/adapters/prisma"
+import { prisma } from "./api/adapters/prisma"
 import { $Enums } from "@prisma/client";
+// import { PrismaAdapter } from "@auth/prisma-adapter"
+
 declare module "next-auth/jwt" {
     interface JWT {
       id: string;
@@ -33,6 +34,8 @@ declare module "next-auth/jwt" {
   }
 export const  { handlers, auth, signIn, signOut } = NextAuth({
   session: { strategy: "jwt" },
+  secret: process.env.AUTH_SECRET,
+  // adapter: PrismaAdapter(prisma),
   trustHost: true,
   providers: [
     CredentialsProvider({
@@ -77,12 +80,19 @@ export const  { handlers, auth, signIn, signOut } = NextAuth({
       return session;
     },
     // async redirect({ url, baseUrl }) {
-    //       return baseUrl
+    //   // Allows relative callback URLs
+    //   if (url.startsWith("/")) return `${baseUrl}${url}`
+   
+    //   // Allows callback URLs on the same origin
+    //   if (new URL(url).origin === baseUrl) return url
+   
+    //   return baseUrl
     // }
       
   },
   pages: {
-    signIn: "/login", // หน้า login ที่คุณต้องสร้าง
-  },
+    signIn: '/signin',
+    error: '/signin' // เพิ่มหน้า error
+  }
 })
 

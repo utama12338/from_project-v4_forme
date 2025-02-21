@@ -3,8 +3,10 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import Navbar from '../Navbar/Navbar';
 import { ThemeProvider } from '@/components/ThemeProvider/Theme';
-import { SessionProvider } from '@/components/SessionProvider';
-import { auth } from "../auth"
+import  SessionProvider  from '../components/SessionProvider';
+import { auth } from "./auth"
+
+
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
