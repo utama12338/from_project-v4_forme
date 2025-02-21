@@ -1,7 +1,7 @@
 import NextAuth from "next-auth"
-import { PrismaClient } from "@prisma/client"
+// import { PrismaClient } from "@prisma/client"
 import CredentialsProvider from "next-auth/providers/credentials"
-import argon2 from 'argon2'
+import bcrypt from 'bcryptjs'
 import type { User } from "@prisma/client"
 import { Session } from "next-auth"
 import { JWT } from "next-auth/jwt"
@@ -33,6 +33,7 @@ declare module "next-auth/jwt" {
   }
 export const  { handlers, auth, signIn, signOut } = NextAuth({
   session: { strategy: "jwt" },
+  trustHost: true,
   providers: [
     CredentialsProvider({
       credentials: {
@@ -48,7 +49,7 @@ export const  { handlers, auth, signIn, signOut } = NextAuth({
           where: { username: credentials.username as string }
         })
 
-        if (!user || !await argon2.verify(user.password, credentials.password as string)) {
+        if (!user || !await bcrypt.compare(credentials.password as string, user.password)) {
             throw new Error("Invalid username or password")
           }
 
@@ -75,9 +76,13 @@ export const  { handlers, auth, signIn, signOut } = NextAuth({
       }
       return session;
     },
+    // async redirect({ url, baseUrl }) {
+    //       return baseUrl
+    // }
+      
   },
   pages: {
-    signIn: "/signin", // หน้า login ที่คุณต้องสร้าง
+    signIn: "/login", // หน้า login ที่คุณต้องสร้าง
   },
 })
 

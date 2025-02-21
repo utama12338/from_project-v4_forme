@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-
+// import { signIn } from '../../../auth';
+import { authenticate } from './gg'
 export default function SignInPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -17,28 +17,31 @@ export default function SignInPage() {
     setIsLoading(true);
     setError('');
 
-    try {
-      const result = await signIn('credentials', {
-        username: username,
-        password: password,
-        redirect: false,
-        callbackUrl: '/form',
-      });
-
-      if (result?.error) {
-        setError(result.error);
-        return;
-      }
-
-      if (result?.ok) {
-        router.replace('/form');
-      }
-    } catch (error) {
-      setError('An error occurred during sign in');
-    } finally {
+    if (!username || !password) {
+      setError('Please fill in all fields');
       setIsLoading(false);
+      return;
     }
-  };
+
+    try {
+      const result = await authenticate(username, password);
+    // ถ้าการ authenticate ไม่สำเร็จ จะเกิด error
+    // และไม่ควรไปที่หน้า form
+    if (result.error) {
+      setError(result.error);
+      return;
+    }
+    if (result.success) {
+      router.replace('/form');
+      router.refresh();
+    }
+  } catch (error) {
+    console.error('Sign in error:', error);
+    setError('An unexpected error occurred');
+  } finally {
+    setIsLoading(false);
+  }
+}
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
